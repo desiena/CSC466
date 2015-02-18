@@ -117,3 +117,149 @@
 
 (defmethod probability ((special integer)(total integer))
   (/ (float special) (float total)))
+
+;;;Task 3 modeling players, a human player and a random player. The human player class is really just an advice taker.
+
+;;The root of the player hierarchy
+
+(defclass player ()
+  ((name :accessor player-name :initarg :name :initform 'emanon)))
+
+;;a random machine player is a player.
+(defclass random-machine-player (player )())
+
+;;a human player is a player
+(defclass human-player (player) ())
+
+;;textual display of a random machine player
+(defmethod display ((p random-machine-player))
+  (format t "Random machine player ...~%")
+  (format t "name = ~A~%" (player-name p))
+  (format t "~%")())
+
+;;textual display of a human player
+(defmethod display ((p human-player))
+  (format t "Human player ...~%")
+  (format t "name = ~A~%" (player-name p))
+  (format t "~%")())
+
+;;a move making method for a random machine player
+(defmethod make-move ((p random-machine-player)(report t) &aux move)
+  (if report (format t "Begin random player move ...~%"))
+  (setf move (select *avail*))
+  (if report (format t "randomly selected ~A for my move~%" move))
+  (setf *avail* (remove move *avail*))
+  (if report (format t "End random player move ...~%"))
+  move)
+
+;;a move making method for a human player
+(defmethod make-move ((p human-player)(report t) &aux move)
+  (if report (format t "Begin human player move ...~%"))
+  (format t "Please select a move from ~A~%" *avail*)
+  (setf move (read))
+  (cond 
+   ((not (member move *avail*))
+    (make-move p))
+   (t
+    (setf *avail* (remove move *avail*))
+    move))
+  (if report (format t "End human player move~%"))
+  move)
+
+;;a generic play method
+(defmethod generic-play ((x player)(o player)(report t) &aux move)
+  (setf *avail* '(nw n ne w c e sw s se))
+  (setf *play-so-far* ())
+  (dolist (player '(x o x o x o x o x))
+    (if (or report (equal (type-of o) 'human-player-machine))
+	(visualize *play-so-far*))
+    (cond
+     ((eq player 'x)
+      (setf move (make-move x report)))
+     ((eq player 'o)
+      (setf move (make-move o report))))
+    (setf *play-so-far* (snoc move *play-so-far*))
+    (if (game-over-p *play-so-far*)(return nil)))
+  *play-so-far*)
+
+;;predicate to determine if the game is over or not
+(defmethod game-over-p ((play list))
+  (cond
+   ((line-p (odd play)) 'w)
+   ((line-p (even play)) 'l)
+   ((= (length play) 9) 'd)
+   (t nil)))
+
+(defmethod odd ((l list))
+  (cond
+   ((null l) ())
+   ((null (cdr l))(list (car l)))
+   (t (cons (car l) (odd (cddr l))))))
+
+(defmethod even ((l list))
+  (cond
+   ((null l)())
+   ((null (cdr l))())
+   (t (cons (cadr l)(even (cddr l))))))
+
+(defmethod line-p ((l list))
+  (cond
+   ((<(length l) 3)
+    ())
+   ((= (length l) 3)
+    (line (first l)(second l)(third l)))
+   ((= (length l) 4)
+    (or
+     (line (first l)(second l)(third l))
+     (line (first l)(second l)(fourth l))
+     (line (first l)(third l)(fourth l))
+     (line (second l)(third l)(fourth l))))
+   ((= (length l) 5)
+    (or
+     (line (first l)(second l)(third l))
+     (line (first l)(second l)(fourth l))
+     (line (first l)(second l)(fifth l))
+     (line (first l)(third l)(fourth l))
+     (line (first l)(fourth l)(fifth l))
+     (line (second l)(third l)(fourth l))
+     (line (second l)(third l)(fifth l))
+     (line (second l)(fourth l)(fifth l))
+     (line (third l)(fourth l)(fifth l))))))
+
+(defmethod line ((moveone symbol)(movetwo symbol)(movethree symbol))
+  (setf moves (list moveone movetwo movethree))
+  (cond 
+   ;;horizontal
+   ((and (member 'n moves) (member 'ne moves) (member 'nw moves)) t)
+   ((and (member 'c moves) (member 'e moves) (member 'w moves)) t)
+   ((and (member 's moves) (member 'se moves) (member 'sw moves)) t)  
+   
+   ;;vertical
+   ((and (member 'sw moves) (member 'w moves) (member 'nw moves)) t)
+   ((and (member 'c moves) (member 's moves) (member 'n moves)) t)
+   ((and (member 'e moves) (member 'se moves) (member 'ne moves)) t)
+   
+   ;;diagonal
+   ((and (member 'se moves) (member 'c moves) (member 'nw moves)) t)
+   ((and (member 'sw moves) (member 'c moves) (member 'ne moves)) t)
+   (t ())))
+
+;;two random machine players play one game
+(defmethod demo-random-random (&aux p x o)
+  (setf x (make-instance 'random-machine-player))
+  (setf o (make-instance 'random-machine-player))
+  (setf p (generic-play x o t))
+  (format t "~A~%" p)
+  (visualize p)
+  (format t "~A~%" (analyze p))
+  ())
+
+;;a random machine player plays one game against a human player
+(defmethod demo-random-human (&aux p x o)
+  (setf x (make-instance 'random-machine-player))
+  (setf o (make-instance 'human-player))
+  (setf p (generic-play x o t))
+  (format t "~A~%" p)
+  (visualize p)
+  (format t "~A~%" (analyze p))
+  ())
