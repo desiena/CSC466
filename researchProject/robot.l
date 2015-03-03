@@ -15,20 +15,25 @@
   (demo1))
 
 (defun display-world ()
-  (format t "Robot Position: ~A~%" *pose*)
+  (format t "Robot Position: ~3$, ~3$, ~3$~%" (car *pose*) (cadr *pose*) (caddr *pose*))
   (format t "         Walls: ~A~%" (car *walls*))
   (dolist (wall (cdr *walls*))
     (format t "              : ~A~%" wall))
   (terpri))
 
-(defun move (translational-velocity rotational-velocity)
+(defun move (translational-velocity rotational-velocity &aux newx newy)
   (let* ((tv (+ translational-velocity (sample-normal (+ (* (expt translational-velocity 2) *a1*) (* (expt rotational-velocity 2) *a2*)))))
 	 (rv (+ rotational-velocity (sample-normal (+ (* (expt translational-velocity 2) *a3*) (* (expt rotational-velocity 2) *a4*)))))
-	 (circularity-error (sample-normal (+ (* (expt translational-velocity 2) *a1*) (* (expt rotational-velocity 2) *a2*))))
-	 (newx (+ (- (car *pose*) (* (/ tv rv) (sin (caddr *pose*))))(* (/ tv rv) (sin (+ (caddr *pose*) (* 1 rv)))))); * 1 is for delta-t    
-	 (newy (- (+ (cadr *pose*) (* (/ tv rv) (cos (caddr *pose*))))(* (/ tv rv) (cos (+ (caddr *pose*) (* 1 rv)))))); * 1 is for delta-t
-	 (newtheta (mod (+ (caddr *pose*) (* rv 1) (* circularity-error 1))(* 2 pi)))); * 1 is for delta-t
-    (setf *pose* (list newx newy newtheta))))
+	 (circularity-error (sample-normal (+ (* (expt translational-velocity 2) *a1*) (* (expt rotational-velocity 2) *a2*)))))
+	 (if (= rv 0)
+	     (progn
+	       (setf newx (+ (car *pose*) (* tv (cos (caddr *pose*)))))  
+	       (setf newy (+ (cadr *pose*) (* tv (sin (caddr *pose*))))))
+	   (progn
+	     (setf newx (+ (- (car *pose*) (* (/ tv rv) (sin (caddr *pose*))))(* (/ tv rv) (sin (+ (caddr *pose*) (* 1 rv)))))); * 1 is for delta-t    
+	     (setf newy (- (+ (cadr *pose*) (* (/ tv rv) (cos (caddr *pose*))))(* (/ tv rv) (cos (+ (caddr *pose*) (* 1 rv)))))))); * 1 is for delta-t
+	 (setf newtheta (mod (+ (caddr *pose*) (* rv 1) (* circularity-error 1))(* 2 pi)))); * 1 is for delta-t
+    (setf *pose* (list newx newy newtheta)))
 
 (defun sample-normal (standard-variability)
   (if (= standard-variability 0.0)
