@@ -4,11 +4,18 @@
 ;;;;An ai project for CSC466, AI2 at Oswego. This project will implement a simulated robot that uses simultaneous localization and mapping algorithms.
 
 (defun init ()
-  (setf *mapsize* 2)
+  (setf *mapsize* 10)
+  (setf *makefigures* t)
   (setf *pose* '(0.0 0.0 0.0)) ;Pose is defined as [x y theta]
-  (setf *walls* '(((1.0 1.0)(-1.0 1.0))((-1.0 1.0)(-1.0 -1.0))((-1.0 -1.0)(1.0 -1.0))((1.0 -1.0)(1.0 1.0))))
+  (setf *walls* '(
+		  ((-3 3)(3 3))
+		  ((-3 3)(-3 -3))
+		  ((3 3)(3 -3))
+		  ((-1.0 1.0)(-1.0 -1.0))
+		  ((-1.0 -1.0)(1.0 -1.0))
+		  ((1.0 -1.0)(1.0 1.0))))
   (setf *beamcount* 16)
-  (setf *beamrange* 50)
+  (setf *beamrange* 10)
   (setf *time* 0)
   (setf *a1* 0.0);translational movement error from translation
   (setf *a2* 0.0);translational movement error from rotation
@@ -16,12 +23,13 @@
   (setf *a4* 0.0);rotational movement error from rotation
   (setf *a5* 0.0);circularity movement error from translation 
   (setf *a6* 0.0);circularity movement error from rotation
-  (setf *sense* (sense))
   (setf *beams* ())
   (let ((i 0))
     (dotimes (x *beamcount*)
       (setf *beams* (cons (+ i (/ (* 2 pi) *beamcount*))  *beams*))
-      (setf i (car *beams*)))))
+      (setf i (car *beams*))))
+  (setf *sense* (sense))
+  (if *makefigures* (pyplot '(0 0))))
 
 (defun display-world ()
   (format t "Robot Position: ~3$, ~3$, ~3$~%" (car *pose*) (cadr *pose*) (caddr *pose*))
@@ -30,26 +38,27 @@
     (format t "              : ~A~%" wall))
   (terpri))
 
-(defun pyplot ()
+(defun pyplot (title)
   (with-open-file (str (format () "plots/time~A.py" *time*)
     :direction :output
     :if-exists :supersede
     :if-does-not-exist :create)
     (format str "import matplotlib.pyplot as plt~%plt.ylim(~A, ~A)~%plt.xlim(~A, ~A)~%plt.gca().set_aspect('equal', adjustable='box')~%" (- 0 *mapsize*) *mapsize* (- 0 *mapsize*) *mapsize*)
-    (format str "plt.arrow(~6$, ~6$, ~6$, ~6$, ec=\"k\", fc=\"none\" ,head_width=0.15, head_length=0.3)~%" 
-	    (- (car *pose*) (* (cos (caddr *pose*)) .05)) 
-	    (- (cadr *pose*) (* (sin (caddr *pose*)) .05))
-	    (* (cos (caddr *pose*)) .0001)
-	    (* (sin (caddr *pose*)) .0001))
-    (dolist (wall *walls*)
-      (format str "plt.plot([~6$,~6$], [~6$,~6$], 'k-', linewidth=2)~%" (caar wall) (caadr wall) (cadar wall) (cadadr wall)))
+    ;(dolist (wall *walls*)
+    ;  (format str "plt.plot([~6$,~6$], [~6$,~6$], 'k-', linewidth=1)~%" (caar wall) (caadr wall) (cadar wall) (cadadr wall)))
     (dotimes (n *beamcount*)
-      (format str "plt.plot([~6$,~6$], [~6$,~6$], 'r-', linewidth=1)~%"
+      (format str "plt.plot([~6$,~6$], [~6$,~6$], 'r-', linewidth=.4)~%"
 	      (car *pose*)
 	      (+ (car *pose*) (* (cos (+ (caddr *pose*) (nth n *beams*)))(nth n *sense*)))
 	      (cadr *pose*)
 	      (+ (cadr *pose*) (* (sin (+ (caddr *pose*) (nth n *beams*)))(nth n *sense*)))))
-    (format str "plt.show()~%")))
+    (format str "plt.suptitle('time = ~A, translation = ~A, rotation = ~A', fontsize=12)~%" *time* (car title) (cadr title))
+    (format str "plt.arrow(~6$, ~6$, ~6$, ~6$, ec=\"k\", fc=\"k\", zorder=4 ,head_width=0.4, head_length=0.6)~%" 
+	    (- (car *pose*) (* (cos (caddr *pose*)) .3)) 
+	    (- (cadr *pose*) (* (sin (caddr *pose*)) .25))
+	    (* (cos (caddr *pose*)) .0001)
+	    (* (sin (caddr *pose*)) .0001))
+    (format str "plt.savefig('nowalltime~A.png', bbox_inches='tight')~%plt.clf()~%" *time*)))
 		    
 
 (defun sense ()
@@ -102,7 +111,8 @@
 	     (setf newy (- (+ (cadr *pose*) (* (/ tv rv) (cos (caddr *pose*))))(* (/ tv rv) (cos (+ (caddr *pose*) (* 1 rv)))))))); * 1 is for delta-t
 	 (setf newtheta (mod (+ (caddr *pose*) (* rv 1) (* circularity-error 1))(* 2 pi)))); * 1 is for delta-t
     (setf *pose* (list newx newy newtheta))
-    (setf *sense* (sense)))
+    (setf *sense* (sense))
+    (if *makefigures* (pyplot (list translational-velocity rotational-velocity))))
 
 (defun sample-normal (standard-variability)
   (if (= standard-variability 0.0)
