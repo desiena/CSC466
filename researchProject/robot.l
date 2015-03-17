@@ -23,6 +23,12 @@
   (setf *a4* 0.0);rotational movement error from rotation
   (setf *a5* 0.0);circularity movement error from translation 
   (setf *a6* 0.0);circularity movement error from rotation
+  (setf *a7* 0.01);range finder phit variance
+  (setf *zshort* .2)
+  (setf *lambdashort* .5);TODO find out what this is
+  (setf *zhit* .65)
+  (setf *zmax* .1)
+  (setf *zrand* .05)
   (setf *beams* ())
   (let ((i 0))
     (dotimes (x *beamcount*)
@@ -44,8 +50,8 @@
     :if-exists :supersede
     :if-does-not-exist :create)
     (format str "import matplotlib.pyplot as plt~%plt.ylim(~A, ~A)~%plt.xlim(~A, ~A)~%plt.gca().set_aspect('equal', adjustable='box')~%" (- 0 *mapsize*) *mapsize* (- 0 *mapsize*) *mapsize*)
-    ;(dolist (wall *walls*)
-    ;  (format str "plt.plot([~6$,~6$], [~6$,~6$], 'k-', linewidth=1)~%" (caar wall) (caadr wall) (cadar wall) (cadadr wall)))
+    (dolist (wall *walls*)
+      (format str "plt.plot([~6$,~6$], [~6$,~6$], 'k-', linewidth=1)~%" (caar wall) (caadr wall) (cadar wall) (cadadr wall)))
     (dotimes (n *beamcount*)
       (format str "plt.plot([~6$,~6$], [~6$,~6$], 'r-', linewidth=.4)~%"
 	      (car *pose*)
@@ -58,7 +64,7 @@
 	    (- (cadr *pose*) (* (sin (caddr *pose*)) .25))
 	    (* (cos (caddr *pose*)) .0001)
 	    (* (sin (caddr *pose*)) .0001))
-    (format str "plt.savefig('nowalltime~A.png', bbox_inches='tight')~%plt.clf()~%" *time*)))
+    (format str "plt.savefig('nondeterministictime~A.png', format='png', bbox_inches='tight')~%plt.clf()~%" *time*)))
 		    
 
 (defun sense ()
@@ -70,8 +76,66 @@
 	    (if distance 
 		(if (< distance  closest)
 		    (setf closest distance)))))
-	(setf senseinput (cons closest senseinput))))
+	(setf senseinput (cons (probabalistic-sense closest) senseinput))))
     (reverse senseinput)))
+
+(defun probabalistic-sense (truerange)
+  (let* ((selected (random 1.0))(computed 0.0)(precision 10)(range (- (/ 1 (* 2 precision))))(pshort-normalizer (pshort-normalizer truerange precision))(phit-normalizer (phit-normalizer precision truerange)))
+    (loop while (and (< computed selected)(< range *beamrange*)) do
+	  (setf range (+ range (/ 1 precision)))
+	  (setf computed (+ computed (probability-of-measurement truerange range precision phit-normalizer pshort-normalizer)))
+	  )
+    range))
+	  
+(defun probability-of-measurement (truerange measurement precision phit-normalizer pshort-normalizer)
+  (+ (/ (* *zhit* (phit truerange measurement precision)) phit-normalizer) (* *zshort* (pshort truerange measurement pshort-normalizer)) (* *zmax* (pmax measurement precision)) (* *zrand* (prand precision))))
+
+(defun visualize-pdf (title precision truerange)
+  (with-open-file (str (format () "pdfvis.py" *time*)
+    :direction :output
+    :if-exists :supersede
+    :if-does-not-exist :create)
+    (format str "import matplotlib.pyplot as plt~%")
+    (dotimes (range (* *beamrange* precision))
+      (format str "plt.plot(~6$, ~6$, 'b.')~%" (format nil "~6$"(+ (/ range precision) (/ 1 (* precision 2)))) (format nil "~6$" (probability-of-measurement truerange (+ (/ range precision) (/ 1 (* precision 2))) precision (phit-normalizer precision truerange) (pshort-normalizer truerange precision)))))
+    (format str "plt.savefig('pdfvis.eps', format='eps', bbox_inches='tight', dpi=100)~%plt.clf()~%")))
+
+(defun pmax (measurement precision)
+  (if (= measurement (- *beamrange* (/ 1 (* 2 precision))))
+      1
+    0))
+
+(defun pshort (truerange measurement norm)
+  (if (>= measurement truerange)
+      0
+    (/ (* *lambdashort* (exp (- (* *lambdashort* measurement)))) norm))) 
+
+(defun pshort-normalizer (truerange precision)
+  (let ((total 0.0))
+    (dotimes (measurement (* *beamrange* precision))
+      (setf total (+ total (if (>= (+ (/ measurement precision) (/ 1 (* precision 2))) truerange) 0 (* *lambdashort* (exp (- (* *lambdashort* (+ (/ measurement precision) (/ 1 (* precision 2)))))))))))
+    total))
+
+(defun pshort-test (truerange precision);ok it works
+  (let ((total 0.0)(norm (pshort-normalizer truerange precision)))
+    (dotimes (measurement (* *beamrange* precision))
+      (setf total (+ total (pshort truerange (+ (/ measurement precision) (/ 1 (* precision 2))) norm))))
+    total))
+
+(defun phit (truerange measurement precision)
+  (prob-normal (- truerange measurement) *a7*))
+
+(defun phit-normalizer (precision truerange)
+  (let ((total 0.0))
+    (dotimes (measurement (* *beamrange* precision))
+      (setf total (+ total (prob-normal (- truerange (+ (/ measurement precision) (/ 1 (* precision 2)))) *a7*))))
+    total))
+
+(defun prob-normal (value variance)
+  (* (/ 1 (sqrt (* 2 pi variance)))(exp (- (/ (expt value 2) (* 2 variance))))))
+
+(Defun Prand (precision)
+  (/ 1.0 (* *beamrange* precision)))
 
 (defun intercept-distance (beam wall)
   (let* ((p0x (car *pose*))
