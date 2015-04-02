@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Okroshka</title>
+<meta name="description" content="Ace DeSiena's course site for CSC466">
+<meta name="keywords" content="CSC466, Oswego, SUNY, SUNY Oswego">
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+	<!--[if gte IE 9 ]><link rel="stylesheet" type="text/css" href="_styles.css" media="screen"><![endif]-->
+	<!--[if !IE]>--><link rel="stylesheet" type="text/css" href="_styles.css" media="screen"><!--<![endif]-->
+<style>
+*, html { font-family: Verdana, Arial, Helvetica, sans-serif; }
+
+body, form, ul, li, p, h1, h2, h3, h4, h5
+{
+	margin: 0;
+	padding: 20 px;
+}
+body { margin: 10 px; }
+img { border: none; }
+p
+{
+	font-size: 1em;
+	margin: 0 0 1em 0;
+}
+
+html { font-size: 100%; /* IE hack */ }
+body { font-size: 1em; /* Sets base font size to 16px */ }
+table { font-size: 100%; /* IE hack */ }
+input, select, textarea, th, td { font-size: 1em; }
+.wrapper {
+  margin: auto;
+  min-width: 70pt;
+  min-height: 70pt;
+  font-family: Helvetica,Arial,sans-serif;
+  width: 1000pt;
+}
+/* CSS Tree menu styles */
+ol.tree
+{
+	padding: 0 0 0 30px;
+}
+	li 
+	{ 
+		position: relative; 
+		margin-left: -15px;
+		list-style: none;
+	}
+	li.file
+	{
+		margin-left: -1px !important;
+	}
+		li.file a
+		{
+			background: url(document.png) 0 0 no-repeat;
+			color: #fff;
+			padding-left: 21px;
+			text-decoration: none;
+			display: block;
+		}
+		li.file a[href *= '.pdf']	{ background: url(document.png) 0 0 no-repeat; }
+		li.file a[href *= '.html']	{ background: url(document.png) 0 0 no-repeat; }
+		li.file a[href $= '.css']	{ background: url(document.png) 0 0 no-repeat; }
+		li.file a[href $= '.js']		{ background: url(document.png) 0 0 no-repeat; }
+	li input
+	{
+		position: absolute;
+		left: 0;
+		margin-left: 0;
+		opacity: 0;
+		z-index: 2;
+		cursor: pointer;
+		height: 1em;
+		width: 100em;
+		top: 0;
+	}
+		li input + ol
+		{
+			background: url(toggle-small-expand.png) 40px 0 no-repeat;
+			margin: -0.938em 0 0 -44px; /* 15px */
+			height: 1em;
+		}
+		li input + ol > li { display: none; margin-left: -14px !important; padding-left: 1px; }
+	li label
+	{
+		background: 15px 1px no-repeat;
+		cursor: pointer;
+		display: block;
+		padding-left: 0px;
+	}
+
+	li input:checked + ol
+	{
+		border: thin #000
+		margin: -1.25em 0 0 -44px; /* 20px */
+		padding: 1.563em 0 0 80px;
+		height: auto;
+	}
+		li input:checked + ol > li { display: block; margin: 0 0 0.125em;  /* 2px */}
+		li input:checked + ol > li:last-child { margin: 0 0 0.063em; /* 1px */ }
+</style>
+</head>
+
+<body>
+<div class="wrapper">
+<br />
+CSC466<br/>
+Artificial Intelligence 2<br />
+Ace DeSiena<br />
+<a href="https://docs.google.com/presentation/d/14r8n0VvnA3wS4upeyAckM8y3qv23xBE5B6pkBcuH_QI/edit?usp=sharing">Today's Presentation</a>
+<ol class="tree">
+		<li>
+			<label for="Research Project">Research Project</label> <input type="checkbox" /> 
+			<ol>
+			  <li><a href="researchProject/CandidateTopics.pdf">Project Candidates</a></li>
+			  <li><a href="researchProject/timelineFramework.pdf">Framework/Timeline</a></li>
+			  <li><label for="Phase One">Phase One</label><input type="checkbox"/>
+			    <ol>
+			      <li><a href="researchProject/PhaseOne/demo.pdf">Demo</a></li>
+			      <li><a href="researchProject/PhaseOne/code.pdf">Code</a></li>
+			    </ol>
+			    <li><label for="Phase One">Phase Two</label><input type="checkbox"/>
+			    <ol>
+			      <li><a href="researchProject/PhaseTwo/index.html">Demo</a></li>
+			      <li><a href="researchProject/PhaseTwo/robot.txt">Code</a></li>
+			    </ol>
+			  </li>
+			  </li>
+			</ol>
+		</li>
+
+	<li>
+			<label for="Programming Assignments">Tic Tac Toe Learning Machine</label> <input type="checkbox" />
+			  <ol>
+			    <li><a href="ttt/ttt1.pdf">Random Move Selection</a></li>
+			    <li><a href="ttt/tttstats.pdf">Visualization, Analysis, and Statistics</a></li>
+			    <li><a href="ttt/tttplayers.pdf">Modeling Players</a></li>
+			  </ol>
+		</li>
+        <li>
+			<label for="Textbook Problem Sets">Textbook Problem Sets</label> <input type="checkbox" /> 
+			<ol>
+			</ol>
+		</li>
+        <li>
+			<label for="Other Problem Sets">Other Problem Sets</label> <input type="checkbox" /> 
+			<ol>
+			</ol>
+		</li>
+        <li>
+			<label for="Misc">Misc.</label> <input type="checkbox" /> 
+			<ol>
+			  <li><a href="misc/LearningaboutLearning.pdf">Learning about Learning and Machine Learning</a></li>
+			  <li><a href="http://library.fora.tv/2012/10/14/Melanie_Mitchell_AI_and_the_Barrier_of_Meaning">Machine Learning Video: Melanie Mitchell and the Barrier of Meaning.(presentation begins at 01:00)</a></li>
+			</ol>
+		</li>
+	</ol>
+</div>
+</body>
+</html>
